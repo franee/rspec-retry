@@ -66,13 +66,16 @@ describe RSpec::Retry do
     end
 
     context 'with :retry => 0' do
-      after(:all) { @@this_ran_once = nil }
+      after(:all) do
+        self.class.class_variable_set(:@@this_ran_once, nil)
+      end
       it 'should still run once', retry: 0 do
-        @@this_ran_once = true
+        self.class.class_variable_set(:@@this_ran_once, true)
       end
 
       it 'should run have run once' do
-        expect(@@this_ran_once).to be true
+        value = self.class.class_variable_get(:@@this_ran_once)
+        expect(value).to be true
       end
     end
 
@@ -336,12 +339,13 @@ describe RSpec::Retry do
     let!(:example_group) do
       RSpec.describe do
         before :all do
-          @@results = {}
+          self.class.class_variable_set(:@@results, {})
         end
 
         around do |example|
           example.run_with_retry
-          @@results[example.description] = [example.exception.nil?, example.attempts]
+          results = self.class.class_variable_get(:@@results)
+          results[example.description] = [example.exception.nil?, example.attempts]
         end
 
         specify 'without retry option' do
